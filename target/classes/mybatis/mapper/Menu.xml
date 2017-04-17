@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gcgProject.dao.impl.MenuDaoImpl">
+
+	<sql id="table"> menu </sql>
+	
+	<resultMap type="menu" id="menuMap">
+		<result property="id" column="Id"/>
+		<result property="menuName" column="menu_name"/>
+		<result property="path" column="path"/>
+		<result property="menuOrder" column="menu_order"/>
+		<result property="pid" column="pid"/>
+	</resultMap>
+	
+	<sql id="sql_where">
+		<if test="Id != null"> and Id = #{Id} </if>
+		<if test="menu_name != null and menu_name != ''"> and menu_name = #{menu_name} </if>
+		<if test="path != null and path != ''"> and path = #{path} </if>
+		<if test="menu_order != null"> and menu_order = #{menu_order} </if>
+		<if test="pid != null"> and pid = #{pid} </if>
+	</sql>
+	
+	<sql id="sql_where_key">
+		Id = #{id}
+	</sql>
+	
+	<sql id="sql_order_key">
+		Id
+	</sql>
+	
+	<sql id="queryLikeSql">
+		<if test="menu_name != null and menu_name != ''"><![CDATA[menu_name LIKE concat('%',#{menu_name}, '%')]]></if>
+		<if test="path != null and path != ''"><![CDATA[or path LIKE concat('%', #{path}, '%')]]></if>
+	</sql>
+	
+	<insert id="insert" parameterType="menu" useGeneratedKeys="true" keyProperty="id">
+		insert into
+		<include refid="table" />
+		(
+			Id, menu_name, path, menu_order, pid
+		) values(
+			#{id}, #{menuName}, #{path}, #{menuOrder}, #{pid}
+		)
+	</insert>
+	
+	<insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+		insert into
+		<include refid="table" />
+		(
+			Id, menu_name, path, menu_order, pid
+		) values
+		<foreach collection="list" item="item" index="index" separator="," >
+			(#{item.id}, #{item.menuName}, #{item.path}, #{item.menuOrder}, #{item.pid})
+		</foreach>
+	</insert>
+	
+	<delete id="delete" parameterType="menu">
+		delete from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</delete>
+	
+	<update id="update" parameterType="menu">
+		update
+		<include refid="table" />
+		<set>
+			Id = #{id},
+			menu_name = #{menuName},
+			path = #{path},
+			menu_order = #{menuOrder},
+			pid = #{pid}
+		</set>
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</update>
+	
+	<!-- 按主键查询 -->
+	<select id="select" parameterType="menu" resultMap="menuMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</select>
+
+	<!-- 按参数查询 -->
+	<select id="selectBy" parameterType="java.util.Map" resultMap="menuMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where" />
+		</where>
+	</select>
+
+	<!-- 按参数查询（分页） -->
+	<select id="findPage" parameterType="java.util.Map" resultMap="menuMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="queryLikeSql" />
+		</where>
+		order by
+		<include refid="sql_order_key" />
+		limit #{a}, #{b}
+	</select>
+	
+	<!-- 按参数查询（分页）数量 -->
+	<select id="findPageCount" parameterType="hashmap" resultType="integer">
+		select count(1) from
+		<include refid="table" />
+		<where>
+			<include refid="queryLikeSql" />
+		</where>
+		order by
+		<include refid="sql_order_key" />
+	</select>
+	
+	<!-- 按参数查询（分页） -->
+	<select id="findFristMenus" resultMap="menuMap">
+		select * from
+		<include refid="table" />
+		where pid = 0
+	</select>
+	
+</mapper>

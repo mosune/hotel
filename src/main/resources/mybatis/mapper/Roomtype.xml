@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gcgProject.dao.impl.RoomtypeDaoImpl">
+
+	<sql id="table"> roomtype </sql>
+	
+	<resultMap type="roomtype" id="roomtypeMap">
+		<result property="id" column="Id"/>
+		<result property="name" column="name"/>
+		<result property="remark" column="remark"/>
+	</resultMap>
+	
+	<sql id="sql_where">
+		<if test="Id != null"> and Id = #{Id} </if>
+		<if test="name != null and name != ''"> and name = #{name} </if>
+		<if test="remark != null and remark != ''"> and remark = #{remark} </if>
+	</sql>
+	
+	<sql id="queryLikeSql">
+		<if test="name != null and name != ''"><![CDATA[name LIKE concat('%',#{name}, '%')]]></if>
+		<if test="remark != null and remark != ''"><![CDATA[or remark LIKE concat('%', #{remark}, '%')]]></if>
+	</sql>
+	
+	<sql id="sql_where_key">
+		Id = #{id}
+	</sql>
+	
+	<sql id="sql_order_key">
+		Id desc
+	</sql>
+	
+	<insert id="insert" parameterType="roomtype" useGeneratedKeys="true" keyProperty="id">
+		insert into
+		<include refid="table" />
+		(
+			Id, name, remark
+		) values(
+			#{id}, #{name}, #{remark}
+		)
+	</insert>
+	
+	<insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+		insert into
+		<include refid="table" />
+		(
+			Id, name, remark
+		) values
+		<foreach collection="list" item="item" index="index" separator="," >
+			(#{item.id}, #{item.name}, #{item.remark})
+		</foreach>
+	</insert>
+	
+	<delete id="delete" parameterType="roomtype">
+		delete from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</delete>
+	
+	<update id="update" parameterType="roomtype">
+		update
+		<include refid="table" />
+		<set>
+			Id = #{id},
+			name = #{name},
+			remark = #{remark}
+		</set>
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</update>
+	
+	<!-- 按主键查询 -->
+	<select id="select" parameterType="roomtype" resultMap="roomtypeMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</select>
+
+	<!-- 按参数查询 -->
+	<select id="selectBy" parameterType="java.util.Map" resultMap="roomtypeMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where" />
+		</where>
+	</select>
+
+	<!-- 按参数查询（分页） -->
+	<select id="findPage" parameterType="java.util.Map" resultMap="roomtypeMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="queryLikeSql" />
+		</where>
+		order by
+		<include refid="sql_order_key" />
+		limit #{a}, #{b}
+	</select>
+	
+	<!-- 按参数查询（分页）数量 -->
+	<select id="findPageCount" parameterType="hashmap" resultType="integer">
+		select count(1) from
+		<include refid="table" />
+		<where>
+			<include refid="queryLikeSql" />
+		</where>
+		order by
+		<include refid="sql_order_key" />
+	</select>
+	
+	<!-- 按参数查询（分页）数量 -->
+	<select id="queryCount" parameterType="hashmap" resultType="integer">
+		select count(1) from room
+		where type_id = #{id} and flag = #{i}
+	</select>
+	
+</mapper>

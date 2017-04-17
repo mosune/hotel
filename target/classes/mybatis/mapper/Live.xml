@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gcgProject.dao.impl.LiveDaoImpl">
+
+	<sql id="table"> live </sql>
+	
+	<resultMap type="live" id="liveMap">
+		<result property="id" column="Id"/>
+		<result property="custId" column="cust_id"/>
+		<result property="roomId" column="room_id"/>
+		<result property="liveTime" column="live_time"/>
+		<result property="endTime" column="end_time"/>
+		<result property="realEndTime" column="real_end_time"/>
+		<result property="deposit" column="deposit"/>
+		<result property="charge" column="charge"/>
+		<result property="destineTime" column="destine_time"/>
+		<result property="createTime" column="create_time"/>
+	</resultMap>
+	
+	<sql id="sql_where">
+		<if test="Id != null and Id != ''"> and Id = #{Id} </if>
+		<if test="cust_id != null and cust_id != ''"> and cust_id = #{cust_id} </if>
+		<if test="room_id != null and room_id != ''"> and room_id = #{room_id} </if>
+		<if test="live_time != null"> and live_time = #{live_time} </if>
+		<if test="end_time != null"> and end_time = #{end_time} </if>
+		<if test="real_end_time != null"> and real_end_time = #{real_end_time} </if>
+		<if test="deposit != null"> and deposit = #{deposit} </if>
+		<if test="charge != null"> and charge = #{charge} </if>
+		<if test="destine_time != null and destine_time != ''"> and destine_time = #{destine_time} </if>
+		<if test="create_time != null"> and create_time = #{create_time} </if>
+	</sql>
+	
+	<sql id="sql_where_key">
+		Id = #{id}
+	</sql>
+	
+	<sql id="sql_order_key">
+		endTime asc
+	</sql>
+	
+	<insert id="insert" parameterType="live" >
+		insert into
+		<include refid="table" />
+		(
+			Id, cust_id, room_id, live_time, end_time, real_end_time, deposit, charge, destine_time, create_time
+		) values(
+			#{id}, #{custId}, #{roomId}, #{liveTime}, #{endTime}, #{realEndTime}, #{deposit}, #{charge}, #{destineTime}, #{createTime}
+		)
+	</insert>
+	
+	<insert id="batchInsert" parameterType="java.util.List" >
+		insert into
+		<include refid="table" />
+		(
+			Id, cust_id, room_id, live_time, end_time, real_end_time, deposit, charge, destine_time, create_time
+		) values
+		<foreach collection="list" item="item" index="index" separator="," >
+			(#{item.id}, #{item.custId}, #{item.roomId}, #{item.liveTime}, #{item.endTime}, #{item.realEndTime}, #{item.deposit}, #{item.charge}, #{item.destineTime}, #{item.createTime})
+		</foreach>
+	</insert>
+	
+	<delete id="delete" parameterType="live">
+		delete from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</delete>
+	
+	<update id="update" parameterType="live">
+		update
+		<include refid="table" />
+		<set>
+			Id = #{id},
+			cust_id = #{custId},
+			room_id = #{roomId},
+			live_time = #{liveTime},
+			end_time = #{endTime},
+			real_end_time = #{realEndTime},
+			deposit = #{deposit},
+			charge = #{charge},
+			destine_time = #{destineTime},
+			create_time = #{createTime}
+		</set>
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</update>
+	
+	<!-- 按主键查询 -->
+	<select id="select" parameterType="live" resultMap="liveMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</select>
+
+	<!-- 按参数查询 -->
+	<select id="selectBy" parameterType="java.util.Map" resultMap="liveMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where" />
+		</where>
+	</select>
+
+	<!-- 按参数查询（分页） -->
+	<select id="findPage" parameterType="java.util.Map" resultMap="liveMap">
+		select * from
+		<include refid="table" />
+		<!-- <where>
+			<include refid="queryLikeSql" />
+		</where> -->
+		order by
+		<include refid="sql_order_key" />
+		limit #{a}, #{b}
+	</select>
+	
+	<!-- 按参数查询（分页）数量 -->
+	<select id="findPageCount" parameterType="hashmap" resultType="integer">
+		select count(1) from
+		<include refid="table" />
+		<!-- <where>
+			<include refid="queryLikeSql" />
+		</where> -->
+		order by
+		<include refid="sql_order_key" />
+	</select>
+	
+	<!-- 按参数查询（分页） -->
+	<select id="findPageSettle" parameterType="java.util.Map" resultType="liveDto">
+		select 
+			A.id as id,
+			A.live_time as liveTime,
+			A.end_time as endTime,
+			A.deposit as deposit,
+			A.charge as charge,
+			B.room_num as roomNum,
+			B.price as price,
+			C.name as passengerName
+		from
+			live as A left join room as B on A.room_id = B.id
+			left join passenger as C on A.cust_id = C.id
+		<where>
+			<if test="room_num != null and room_num != ''"><![CDATA[B.room_num LIKE concat('%',#{room_num}, '%')]]></if>
+			and B.flag = #{flag} and A.real_end_time is null
+		</where>
+		order by
+		<include refid="sql_order_key" />
+		limit #{a}, #{b}
+	</select>
+	
+	<!-- 按参数查询（分页）数量 -->
+	<select id="findPageSettleCount" parameterType="hashmap" resultType="integer">
+		select count(1) from
+			live as A left join room as B on A.room_id = B.id
+			left join passenger as C on A.cust_id = C.id
+		<where>
+			<if test="room_num != null and room_num != ''"><![CDATA[B.room_num LIKE concat('%',#{room_num}, '%')]]></if>
+			and B.flag = #{flag} and A.real_end_time is null
+		</where>
+	</select>
+	
+	<!-- 按条件查询房间 -->
+	<select id="findRoomByFlag" parameterType="hashmap" resultType="liveDto">
+		select 
+			A.live_time as liveTime,
+			A.end_time as endTime,
+			A.id as id,
+			B.room_num as roomNum,
+			B.id as roomId
+		from
+			live as A left join room as B on A.room_id = B.id
+		<where>
+			B.flag = #{flag} and A.destine_time = #{destine_time} and A.real_end_time is null
+		</where>
+	</select>
+	
+</mapper>

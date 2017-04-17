@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gcgProject.dao.impl.BillflowDaoImpl">
+
+	<sql id="table"> billflow </sql>
+	
+	<resultMap type="billflow" id="billflowMap">
+		<result property="id" column="Id"/>
+		<result property="type" column="type"/>
+		<result property="charge" column="charge"/>
+		<result property="createTime" column="create_time"/>
+	</resultMap>
+	
+	<sql id="sql_where">
+		<if test="Id != null and Id != ''"> and Id = #{Id} </if>
+		<if test="type != null and type != ''"> and type = #{type} </if>
+		<if test="charge != null"> and charge = #{charge} </if>
+		<if test="create_time != null"> and create_time = #{create_time} </if>
+	</sql>
+	
+	<sql id="sql_where_key">
+		Id = #{id}
+	</sql>
+	
+	<sql id="sql_order_key">
+		create_time desc
+	</sql>
+	
+	<insert id="insert" parameterType="billflow" >
+		insert into
+		<include refid="table" />
+		(
+			Id, type, charge, create_time
+		) values(
+			#{id}, #{type}, #{charge}, #{createTime}
+		)
+	</insert>
+	
+	<insert id="batchInsert" parameterType="java.util.List" >
+		insert into
+		<include refid="table" />
+		(
+			Id, type, charge, create_time
+		) values
+		<foreach collection="list" item="item" index="index" separator="," >
+			(#{item.id}, #{item.type}, #{item.charge}, #{item.createTime})
+		</foreach>
+	</insert>
+	
+	<delete id="delete" parameterType="billflow">
+		delete from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</delete>
+	
+	<update id="update" parameterType="billflow">
+		update
+		<include refid="table" />
+		<set>
+			Id = #{id},
+			type = #{type},
+			charge = #{charge},
+			create_time = #{createTime}
+		</set>
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</update>
+	
+	<!-- 按主键查询 -->
+	<select id="select" parameterType="billflow" resultMap="billflowMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</select>
+
+	<!-- 按参数查询 -->
+	<select id="selectBy" parameterType="java.util.Map" resultMap="billflowMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where" />
+		</where>
+	</select>
+
+	<!-- 按参数查询（分页） -->
+	<select id="findPage" parameterType="java.util.Map" resultMap="billflowMap">
+		select * from
+		<include refid="table" />
+		<!-- <where>
+			<include refid="queryLikeSql" />
+		</where> -->
+		order by
+		<include refid="sql_order_key" />
+		limit #{a}, #{b}
+	</select>
+	
+	<!-- 按参数查询（分页）数量 -->
+	<select id="findPageCount" parameterType="hashmap" resultType="integer">
+		select count(1) from
+		<include refid="table" />
+		<!-- <where>
+			<include refid="queryLikeSql" />
+		</where> -->
+		order by
+		<include refid="sql_order_key" />
+	</select>
+	
+	<!-- 查询总金额-->
+	<select id="getCountBillFlow" parameterType="string" resultType="java.math.BigDecimal">
+		select sum(charge) from
+		<include refid="table" />
+		where type = #{0}
+	</select>
+	
+</mapper>

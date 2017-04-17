@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gcgProject.dao.impl.StaffDaoImpl">
+
+	<sql id="table"> staff </sql>
+	
+	<resultMap type="staff" id="staffMap">
+		<result property="id" column="Id"/>
+		<result property="loginName" column="login_name"/>
+		<result property="password" column="password"/>
+		<result property="realName" column="real_name"/>
+		<result property="positionId" column="position_id"/>
+		<result property="remark" column="remark"/>
+		<result property="flag" column="flag"/>
+		<result property="createTime" column="create_time"/>
+	</resultMap>
+	
+	<sql id="sql_where">
+		<if test="Id != null and Id != ''"> and Id = #{Id} </if>
+		<if test="login_name != null and login_name != ''"> and login_name = #{login_name} </if>
+		<if test="password != null and password != ''"> and password = #{password} </if>
+		<if test="real_name != null and real_name != ''"> and real_name = #{real_name} </if>
+		<if test="position_id != null"> and position_id = #{position_id} </if>
+		<if test="remark != null and remark != ''"> and remark = #{remark} </if>
+		<if test="flag != null"> and flag = #{flag} </if>
+		<if test="create_time != null"> and create_time = #{create_time} </if>
+	</sql>
+	
+	<sql id="queryLikeSql">
+		<if test="login_name != null and login_name != ''"><![CDATA[A.login_name LIKE concat('%',#{login_name}, '%')]]></if>
+		<if test="real_name != null and real_name != ''"><![CDATA[or A.real_name LIKE concat('%', #{real_name}, '%')]]></if>
+		<if test="remark != null and remark != ''"><![CDATA[or A.remark LIKE concat('%', #{remark}, '%')]]></if>
+	</sql>
+	
+	<sql id="sql_where_key">
+		Id = #{id}
+	</sql>
+	
+	<sql id="sql_order_key">
+		create_time desc
+	</sql>
+	
+	<insert id="insert" parameterType="staff" >
+		insert into
+		<include refid="table" />
+		(
+			Id, login_name, password, real_name, position_id, remark, flag, create_time
+		) values(
+			#{id}, #{loginName}, #{password}, #{realName}, #{positionId}, #{remark}, #{flag}, #{createTime}
+		)
+	</insert>
+	
+	<insert id="batchInsert" parameterType="java.util.List" >
+		insert into
+		<include refid="table" />
+		(
+			Id, login_name, password, real_name, position_id, remark, flag, create_time
+		) values
+		<foreach collection="list" item="item" index="index" separator="," >
+			(#{item.id}, #{item.loginName}, #{item.password}, #{item.realName}, #{item.positionId}, #{item.remark}, #{item.flag}, #{item.createTime})
+		</foreach>
+	</insert>
+	
+	<delete id="delete" parameterType="staff">
+		delete from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</delete>
+	
+	<update id="update" parameterType="staff">
+		update
+		<include refid="table" />
+		<set>
+			Id = #{id},
+			login_name = #{loginName},
+			password = #{password},
+			real_name = #{realName},
+			position_id = #{positionId},
+			remark = #{remark},
+			flag = #{flag},
+			create_time = #{createTime}
+		</set>
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</update>
+	
+	<!-- 按主键查询 -->
+	<select id="select" parameterType="staff" resultMap="staffMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where_key" />
+		</where>
+	</select>
+
+	<!-- 按参数查询 -->
+	<select id="selectBy" parameterType="java.util.Map" resultMap="staffMap">
+		select * from
+		<include refid="table" />
+		<where>
+			<include refid="sql_where" />
+		</where>
+	</select>
+
+	<!-- 按参数查询（分页） -->
+	<select id="findPage" parameterType="hashmap" resultType="staffDto">
+		select A.*,B.name as posName
+		from 
+		<include refid="table" /> as A
+		left join position as B on A.position_id = B.id
+		<where>
+			<include refid="queryLikeSql" />
+		</where>
+		order by
+		<include refid="sql_order_key" />
+		limit #{a}, #{b}
+	</select>
+	
+	<!-- 按参数查询（分页）数量 -->
+	<select id="findPageCount" parameterType="hashmap" resultType="integer">
+		select count(1) from
+		<include refid="table" />
+		<where>
+			<include refid="queryLikeSql" />
+		</where>
+		order by
+		<include refid="sql_order_key" />
+	</select>
+	
+</mapper>
